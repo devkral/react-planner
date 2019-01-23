@@ -111,9 +111,9 @@ module.exports = (env, self) => {
     isProduction: JSON.stringify(isProduction)
   }));
 
-  if (!isProduction) {
+  /*if (!isProduction) {
     config.plugins.push(new OpenBrowserPlugin({url: `http://localhost:${port}`}));
-  }
+  }*/
 
   return config;
 };
