@@ -33,7 +33,7 @@ export default function ActiveDrawingHelper({snap, width, height}) {
         return <line x1={pointV0.x} y1={pointV0.y} x2={pointV1.x} y2={pointV1.y} style={STYLE}/>;
       return null;
 
-    case'line-segment':
+    case 'line-segment':
       return <line x1={snap.x1} y1={snap.y1} x2={snap.x2} y2={snap.y2} style={STYLE}/>;
 
     default:
