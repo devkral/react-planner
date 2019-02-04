@@ -165,21 +165,22 @@ class Hole {
 
 
       // does it overlap
-      let overlaps = state.getIn(['scene', 'layers', layerID, 'lines', lineID, 'holes']).findIndex(hID => {
-        if (selectedHole && hID == selectedHole.id){
+      let real_offset = offset * lineLength;
+      let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().findIndex(h => {
+        if (selectedHole && (h.id == selectedHole.id || h.line != selectedHole.line)){
           return false;
         }
-        let h = state.getIn(['scene', 'layers', layerID, 'holes', hID]);
         let hwidth = h.properties.get('width').get('length');
-        let hoffset = h.get('offset');
-        if (hoffset >= offset && hoffset <= offset+width){
+        let hoffset = h.get('offset')*lineLength;
+        if (hoffset >= real_offset && hoffset <= real_offset+width){
           return true;
         }
-        if (hoffset+hwidth >= offset && hoffset+hwidth <= offset+width){
+        if (hoffset+hwidth >= real_offset && hoffset+hwidth <= real_offset+width){
           return true;
         }
         return false;
-      }) !== -1;
+      });
+      overlaps = overlaps !== -1;
 
       //if hole does exist, update
       if (selectedHole && !overlaps) {
@@ -347,20 +348,21 @@ class Hole {
 
 
     // does it overlap
-    let overlaps = state.getIn(['scene', 'layers', layerID, 'lines', line.id, 'holes']).findIndex(hID => {
-      if (hID == holeID)
+    let real_offset = offset * lineLength;
+    let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().findIndex(h => {
+      if (h.id == holeID || h.line != hole.line)
         return false;
-      let h = state.getIn(['scene', 'layers', layerID, 'holes', hID]);
       let hwidth = h.properties.get('width').get('length');
-      let hoffset = h.get('offset');
-      if (hoffset >= offset && hoffset <= offset+width){
+      let hoffset = h.get('offset')*lineLength;
+      if (hoffset >= real_offset && hoffset <= real_offset+width){
         return true;
       }
-      if (hoffset+hwidth >= offset && hoffset+hwidth <= offset+width){
+      if (hoffset+hwidth >= real_offset && hoffset+hwidth <= real_offset+width){
         return true;
       }
       return false;
-    }) !== -1;
+    });
+    overlaps = overlaps !== -1;
 
 
     if(!overlaps){
