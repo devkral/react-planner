@@ -163,8 +163,26 @@ class Hole {
         }
       }
 
+
+      // does it overlap
+      let overlaps = state.getIn(['scene', 'layers', layerID, 'lines', lineID, 'holes']).findIndex(hID => {
+        if (selectedHole && hID == selectedHole.id){
+          return false;
+        }
+        let h = state.getIn(['scene', 'layers', layerID, 'holes', hID]);
+        let hwidth = h.properties.get('width').get('length');
+        let hoffset = h.get('offset');
+        if (hoffset >= offset && hoffset <= offset+width){
+          return true;
+        }
+        if (hoffset+hwidth >= offset && hoffset+hwidth <= offset+width){
+          return true;
+        }
+        return false;
+      }) !== -1;
+
       //if hole does exist, update
-      if (selectedHole && snap) {
+      if (selectedHole && !overlaps) {
         state = state.mergeIn(['scene', 'layers', layerID, 'holes', selectedHole], {offset, line: lineID});
 
         //remove from old line ( if present )
@@ -182,7 +200,7 @@ class Hole {
         if (!line_holes.contains(selectedHole)) {
           state = state.setIn(['scene', 'layers', layerID, 'lines', lineID, 'holes'], line_holes.push(selectedHole));
         }
-      } else if (!selectedHole && snap) {
+      } else if(!overlaps) {
         //if hole does not exist, create
         let {updatedState: stateH, hole} = this.create(state, layerID, state.drawingSupport.get('type'), lineID, offset);
         state = Hole.select(stateH, layerID, hole.id).updatedState;
@@ -327,11 +345,31 @@ class Hole {
       }
     }
 
-    hole = hole.set('offset', offset);
 
-    state = state.merge({
-      scene: scene.mergeIn(['layers', layerID, 'holes', holeID], hole)
-    });
+    // does it overlap
+    let overlaps = state.getIn(['scene', 'layers', layerID, 'lines', line.id, 'holes']).findIndex(hID => {
+      if (hID == holeID)
+        return false;
+      let h = state.getIn(['scene', 'layers', layerID, 'holes', hID]);
+      let hwidth = h.properties.get('width').get('length');
+      let hoffset = h.get('offset');
+      if (hoffset >= offset && hoffset <= offset+width){
+        return true;
+      }
+      if (hoffset+hwidth >= offset && hoffset+hwidth <= offset+width){
+        return true;
+      }
+      return false;
+    }) !== -1;
+
+
+    if(!overlaps){
+      hole = hole.set('offset', offset);
+
+      state = state.merge({
+        scene: scene.mergeIn(['layers', layerID, 'holes', holeID], hole)
+      });
+    }
 
     return {updatedState: state};
   }
