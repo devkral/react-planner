@@ -165,22 +165,44 @@ class Hole {
 
 
       // does it overlap
-      let real_offset = offset * lineLength;
-      let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().findIndex(h => {
-        if (selectedHole && (h.id == selectedHole.id || h.line != selectedHole.line)){
+      let perc_width = width / lineLength;
+      let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().find(h => {
+        if ((selectedHole && h.id == selectedHole.id) || h.line != lineID){
           return false;
         }
-        let hwidth = h.properties.get('width').get('length');
-        let hoffset = h.get('offset')*lineLength;
-        if (hoffset >= real_offset && hoffset <= real_offset+width){
+        let hwidth = h.properties.get('width').get('length')/lineLength;
+        let hoffset = h.get('offset');
+        if (hoffset > offset && hoffset < offset+perc_width){
           return true;
         }
-        if (hoffset+hwidth >= real_offset && hoffset+hwidth <= real_offset+width){
+        if (hoffset+hwidth > offset && hoffset+hwidth < offset+perc_width){
           return true;
         }
         return false;
       });
-      overlaps = overlaps !== -1;
+
+      if (overlaps){
+        if (offset<overlaps.get('offset')){
+          offset = Math.max(0, overlaps.get('offset')-perc_width);
+        } else {
+          offset = Math.min(1-overlaps.properties.get('width').get('length')/lineLength, overlaps.get('offset')+overlaps.properties.get('width').get('length')/lineLength);
+        }
+      }
+
+      overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().find(h => {
+        if ((selectedHole && h.id == selectedHole.id) || h.line != lineID){
+          return false;
+        }
+        let hwidth = h.properties.get('width').get('length')/lineLength;
+        let hoffset = h.get('offset');
+        if (hoffset > offset && hoffset < offset+perc_width){
+          return true;
+        }
+        if (hoffset+hwidth > offset && hoffset+hwidth < offset+perc_width){
+          return true;
+        }
+        return false;
+      }) != null;
 
       //if hole does exist, update
       if (selectedHole && !overlaps) {
@@ -348,22 +370,41 @@ class Hole {
 
 
     // does it overlap
-    let real_offset = offset * lineLength;
-    let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().findIndex(h => {
+    let perc_width = width / lineLength;
+    let overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().find(h => {
       if (h.id == holeID || h.line != hole.line)
         return false;
-      let hwidth = h.properties.get('width').get('length');
-      let hoffset = h.get('offset')*lineLength;
-      if (hoffset >= real_offset && hoffset <= real_offset+width){
+      let hwidth = h.properties.get('width').get('length')/lineLength;
+      let hoffset = h.get('offset');
+      if (hoffset > offset && hoffset < offset+perc_width){
         return true;
       }
-      if (hoffset+hwidth >= real_offset && hoffset+hwidth <= real_offset+width){
+      if (hoffset+hwidth > offset && hoffset+hwidth < offset+perc_width){
         return true;
       }
       return false;
     });
-    overlaps = overlaps !== -1;
 
+    if (overlaps){
+      if (offset<overlaps.get('offset')){
+        offset = Math.max(0, overlaps.get('offset')-perc_width);
+      } else {
+        offset = Math.min(1-overlaps.properties.get('width').get('length')/lineLength, overlaps.get('offset')+overlaps.properties.get('width').get('length')/lineLength);
+      }
+    }
+    overlaps = state.getIn(['scene', 'layers', layerID, 'holes']).valueSeq().find(h => {
+      if (h.id == holeID || h.line != hole.line)
+        return false;
+      let hwidth = h.properties.get('width').get('length')/lineLength;
+      let hoffset = h.get('offset');
+      if (hoffset >= offset && hoffset <= offset+perc_width){
+        return true;
+      }
+      if (hoffset+hwidth >= offset && hoffset+hwidth <= offset+perc_width){
+        return true;
+      }
+      return false;
+    });
 
     if(!overlaps){
       hole = hole.set('offset', offset);
